@@ -13,9 +13,26 @@ This project aims to create a free and open source firmware for iMX6-based elect
 ## Quick Start
 ```bash
 git clone https://github.com/librescoot/librescoot.git
-cd openscoot
+cd librescoot
 ./run.sh
 ```
+
+The compiled firmware will be located at:
+```
+yocto/build/tmp-glibc/deploy/images/librescoot-mdb/*.wic.gz
+```
+
+## Flashing Instructions
+To flash the firmware to the Middle Driver Board (MDB):
+
+1. Connect the MDB via mini-USB
+2. Power the MDB with a stable 12V power supply
+3. Ensure the MDB is in mass-storage mode
+4. Flash using:
+```bash
+gunzip -c firmware.wic.gz | sudo dd of=/dev/sdX bs=4M oflag=direct status=progress
+```
+Replace `/dev/sdX` with your actual device path.
 
 ## Current Status
 This is heavily work-in-progress. The codebase is unstable and changing rapidly. At this stage, the project is for development and research purposes only.
