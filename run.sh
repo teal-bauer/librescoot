@@ -2,7 +2,7 @@
 
 mkdir -p yocto
 
-sudo chown -R 999:999 yocto
+sudo chown 999:999 yocto
 
 if ! sudo docker images | grep -q yocto-librescoot; then
     sudo docker build -t yocto-librescoot ./docker
