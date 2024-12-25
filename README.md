@@ -21,6 +21,11 @@ The compiled firmware will be located at:
 ```
 yocto/build/tmp-glibc/deploy/images/librescoot-mdb/*.wic.gz
 ```
+for MDB or
+```
+yocto/build/tmp-glibc/deploy/images/librescoot-dbc/*.wic.gz
+```
+for DBC.
 
 ## Flashing Instructions
 To flash the firmware to the Middle Driver Board (MDB):

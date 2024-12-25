@@ -16,45 +16,33 @@ if [ ! -d .repo ]; then
     repo sync
 fi
 
-# Clone meta-mender layer if not present
-if [ ! -d sources/meta-mender ]; then
-    echo "Cloning meta-librescoot layer..."
-    git clone -b scarthgap https://github.com/mendersoftware/meta-mender sources/meta-mender
-else
-    cd sources/meta-mender
-    git checkout scarthgap
-    git pull
-    cd /yocto
-fi
+# Clone required layers if not present
+clone_layer() {
+    local name=$1
+    local branch=$2
+    local repo_url=$3
+    local path=$4
 
-# Clone meta-librescoot layer if not present
-if [ ! -d sources/meta-librescoot ]; then
-    echo "Cloning meta-librescoot layer..."
-    git clone -b scarthgap https://github.com/librescoot/meta-librescoot sources/meta-librescoot
-else
-    cd sources/meta-librescoot
-    git checkout scarthgap
-    git pull
-    cd /yocto
-fi
+    if [ ! -d "$path" ]; then
+        echo "Cloning $name layer..."
+        git clone -b "$branch" "$repo_url" "$path"
+    else
+        cd "$path"
+        git checkout "$branch"
+        git pull
+        cd /yocto
+    fi
+}
+
+clone_layer "meta-mender" "scarthgap" "https://github.com/mendersoftware/meta-mender" "sources/meta-mender"
+clone_layer "meta-flutter" "scarthgap" "https://github.com/meta-flutter/meta-flutter.git" "sources/meta-flutter"
+clone_layer "meta-librescoot" "scarthgap" "https://github.com/librescoot/meta-librescoot" "sources/meta-librescoot"
 
 echo "Setting up build environment..."
 DISTRO=librescoot-mdb source ./imx-setup-release.sh -b build
 
-if ! grep -q "meta-mender-core" /yocto/build/conf/bblayers.conf && \
-   ! grep -q "meta-mender-demo" /yocto/build/conf/bblayers.conf && \
-   ! grep -q "meta-librescoot" /yocto/build/conf/bblayers.conf; then
-    echo "Adding additional layers to bblayers.conf..."
-    cat >> /yocto/build/conf/bblayers.conf << 'EOL'
-
-BBLAYERS += " \
-  ${BSPDIR}/sources/meta-mender/meta-mender-core \
-  ${BSPDIR}/sources/meta-mender/meta-mender-demo \
-  ${BSPDIR}/sources/meta-librescoot \
-"
-EOL
-fi
-
+# Overwrite bblayers.conf
+echo "Overwriting bblayers.conf..."
 cat > /yocto/build/conf/bblayers.conf << 'EOL'
 LCONF_VERSION = "7"
 
@@ -74,13 +62,25 @@ BBLAYERS = " \
   ${BSPDIR}/sources/meta-mender/meta-mender-core \
   ${BSPDIR}/sources/meta-mender/meta-mender-demo \
   ${BSPDIR}/sources/meta-librescoot \
-  "
+  ${BSPDIR}/sources/meta-flutter \
+"
 EOL
 
+# Update local.conf based on the TARGET environment variable
+TARGET="${TARGET:-mdb}"
+
+if [ "$TARGET" == "dbc" ]; then
+    MACHINE="librescoot-dbc"
+    DISTRO="librescoot-dbc"
+else
+    MACHINE="librescoot-mdb"
+    DISTRO="librescoot-mdb"
+fi
+
 echo "Creating local.conf..."
-cat > /yocto/build/conf/local.conf << 'EOL'
-MACHINE ??= 'librescoot-mdb'
-DISTRO ?= 'librescoot-mdb'
+cat > /yocto/build/conf/local.conf << EOL
+MACHINE ??= '$MACHINE'
+DISTRO ?= '$DISTRO'
 MENDER_ARTIFACT_NAME = "release-1"
 INHERIT += "mender-full"
 ARTIFACTIMG_FSTYPE = "ext4"
@@ -114,5 +114,5 @@ EOL
 
 echo "Starting build process..."
 
-bitbake librescoot-mdb-image --continue
+bitbake librescoot-${TARGET}-image --continue
 
