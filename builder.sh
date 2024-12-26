@@ -5,6 +5,8 @@ set -e
 REBUILD=false
 INTERACTIVE=false
 
+VOLUME_NAME="librescoot-yocto-build"
+
 source_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 uid=$(id -u)
 gid=$(id -g)
@@ -28,6 +30,8 @@ function usage() {
 function setup_docker() {
     COMMIT_ID=$(git rev-parse --short HEAD)
     IMAGE_NAME="yocto-librescoot:${COMMIT_ID}"
+    
+    docker volume inspect $VOLUME_NAME >/dev/null 2>&1 || docker volume create $VOLUME_NAME
 
     if [ "$REBUILD" = true ] || ! docker images "${IMAGE_NAME}" | grep -q "${COMMIT_ID}"; then
         [ "$REBUILD" = true ] && echo "Forcing rebuild!"
@@ -72,14 +76,14 @@ case "$COMMAND" in
     build)
         [ -z "$TARGET" ] && usage
         docker run -it --rm \
-            -v "${source_dir}/yocto:/yocto" \
+            -v "${VOLUME_NAME}:/yocto" \
             --name yocto-build \
             -e TARGET="${TARGET}" \
             "${IMAGE_NAME}"
         ;;
     interactive)
         docker run -it --rm \
-            -v "${source_dir}/yocto:/yocto" \
+            -v "${VOLUME_NAME}:/yocto" \
             --name yocto-build-interactive \
             --entrypoint /bin/bash \
             "${IMAGE_NAME}"
