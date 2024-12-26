@@ -15,8 +15,8 @@ IMAGE_NAME="yocto-librescoot:${COMMIT_ID}"
 
 mkdir -p yocto
 
-if ! docker images | grep -q "${COMMIT_ID}"; then
-    echo "Building Docker image ${IMAGE_NAME}..."
+if ! docker images "${IMAGE_NAME}" | grep -q "${COMMIT_ID}"; then
+    echo "Docker image ${IMAGE_NAME} not found, building..."
     docker build \
         --build-arg UID=$(id -u) \
         --build-arg GID=$(id -g) \
