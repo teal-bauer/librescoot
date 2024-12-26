@@ -16,11 +16,9 @@ IMAGE_NAME="yocto-librescoot:${COMMIT_ID}"
 mkdir -p yocto
 sudo chown 999:999 yocto
 
-if ! docker images "${IMAGE_NAME}" | grep -q "${COMMIT_ID}"; then
-    echo "Did not find existing Docker image ${IMAGE_NAME}, building it..."
-    docker build \
-        -t "${IMAGE_NAME}" \
-        ./docker
+if ! sudo docker images | grep -q "${COMMIT_ID}"; then
+    echo "Building Docker image ${IMAGE_NAME}..."
+    sudo docker build -t "${IMAGE_NAME}" ./docker
 else
     echo "Using existing Docker image ${IMAGE_NAME}."
 fi
