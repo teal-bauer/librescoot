@@ -18,9 +18,10 @@ RUN apt-get update && apt-get install -y \
 
 RUN locale-gen en_US.UTF-8
 
+RUN groupadd -g ${GID} -f yocto && \
+    useradd -m -u ${UID} -g ${GID} yocto
+
 RUN mkdir -p /etc/sudoers.d && \
-    groupadd -g ${GID} yocto && \
-    useradd -m -u ${UID} -g ${GID} yocto && \
     usermod -aG sudo yocto && \
     echo "yocto ALL=(ALL) NOPASSWD: ALL" > /etc/sudoers.d/yocto
 
