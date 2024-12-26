@@ -77,6 +77,8 @@ else
     DISTRO="librescoot-mdb"
 fi
 
+BSPDIR=/yocto
+
 echo "Creating local.conf..."
 cat > /yocto/build/conf/local.conf << EOL
 MACHINE ??= '$MACHINE'
