@@ -1,5 +1,9 @@
 #!/bin/bash
+
 set -e
+
+echo "Librescoot yocto-builder starting..."
+uname -a
 
 cd /yocto
 
@@ -81,8 +85,8 @@ BSPDIR=/yocto
 
 echo "Creating local.conf..."
 cat > /yocto/build/conf/local.conf << EOL
-MACHINE ??= '$MACHINE'
-DISTRO ?= '$DISTRO'
+MACHINE ??= '${MACHINE}'
+DISTRO ?= '${DISTRO}'
 MENDER_ARTIFACT_NAME = "release-1"
 INHERIT += "mender-full"
 ARTIFACTIMG_FSTYPE = "ext4"
@@ -101,11 +105,10 @@ PACKAGECONFIG:append:pn-qemu-system-native = " sdl"
 CONF_VERSION = "2"
 DL_DIR ?= "${BSPDIR}/downloads/"
 ACCEPT_FSL_EULA = "1"
-HOSTTOOLS += "x86_64-linux-gnu-gcc git-lfs python"
+HOSTTOOLS += "arm-linux-gnueabihf-gcc git-lfs python"
 EXTRA_IMAGE_FEATURES = "debug-tweaks"
 EOL
 
 echo "Starting build process..."
 
 bitbake librescoot-${TARGET}-image --continue
-
