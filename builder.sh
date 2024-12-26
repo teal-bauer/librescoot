@@ -1,9 +1,17 @@
 #!/bin/bash
 
+set -e
+
 REBUILD=false
 INTERACTIVE=false
 
 source_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+uid=$(id -u)
+gid=$(id -g)
+
+echo $source_dir
+
+mkdir -p "${source_dir}/yocto"
 
 function usage() {
     (
@@ -20,14 +28,14 @@ function usage() {
 function setup_docker() {
     COMMIT_ID=$(git rev-parse --short HEAD)
     IMAGE_NAME="yocto-librescoot:${COMMIT_ID}"
-    mkdir -p yocto
 
     if [ "$REBUILD" = true ] || ! docker images "${IMAGE_NAME}" | grep -q "${COMMIT_ID}"; then
         [ "$REBUILD" = true ] && echo "Forcing rebuild!"
         echo "Building Docker image ${IMAGE_NAME}..."
+
         docker build \
-            --build-arg UID=$(id -u) \
-            --build-arg GID=$(id -g) \
+            --build-arg UID=$uid \
+            --build-arg GID=$gid \
             -t "${IMAGE_NAME}" \
             ./docker
     else
@@ -41,8 +49,12 @@ while [[ $# -gt 0 ]]; do
             REBUILD=true
             shift
             ;;
-        build|interactive)
-            COMMAND="$1"
+        build)
+            COMMAND=build
+            shift
+            ;;
+        interactive|shell)
+            COMMAND=interactive
             shift
             ;;
         *)
@@ -60,15 +72,15 @@ case "$COMMAND" in
     build)
         [ -z "$TARGET" ] && usage
         docker run -it --rm \
-            -v "$(pwd)/yocto:/yocto" \
+            -v "${source_dir}/yocto:/yocto" \
             --name yocto-build \
             -e TARGET="${TARGET}" \
             "${IMAGE_NAME}"
         ;;
     interactive)
         docker run -it --rm \
-            -v "$(pwd)/yocto:/yocto" \
-            --name yocto-build \
+            -v "${source_dir}/yocto:/yocto" \
+            --name yocto-build-interactive \
             --entrypoint /bin/bash \
             "${IMAGE_NAME}"
         ;;
